@@ -4,7 +4,7 @@
 
 Automatic follow-ups for commercial proposals (quotes) in Dolibarr.
 
-- An hourly scheduled job sends a follow-up email, with the quote PDF attached, to the contacts having the "Customer contact follow-up" role on each validated quote whose follow-up is due.
+- A scheduled job sends a follow-up email, with the quote PDF attached, to the contacts having the "Customer contact follow-up" role on each validated quote whose follow-up is due.
 - Follow-ups stop when the quote is signed, refused or billed, when its validity date has passed, when the maximum number of follow-ups is reached, or when "Do not follow up" is checked on the quote.
 - Delays are a list of days (e.g. `7,15,30`), counted from the date the quote was sent to the customer ("Sent to customer on", filled automatically when the quote is sent by email from Dolibarr, or entered by hand), else from its validation date.
 - The number of emails per run, the sending hours and working days are configurable.
