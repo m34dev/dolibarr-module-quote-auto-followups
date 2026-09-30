@@ -84,12 +84,12 @@ class modQuoteAutoFollowups extends DolibarrModules
 		// If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
 		// If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
 		// To use a supported fa-xxx css style of font awesome, use this->picto='xxx'
-		$this->picto = 'quoteautofollowups@quoteautofollowups';;
+		$this->picto = 'quoteautofollowups@quoteautofollowups';
 
 		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
 		$this->module_parts = array(
 			// Set this to 1 if module has its own trigger directory (core/triggers)
-			'triggers' => 0,
+			'triggers' => 1,
 			// Set this to 1 if module has its own login method file (core/login)
 			'login' => 0,
 			// Set this to 1 if module has its own substitution function file (core/substitutions)
@@ -117,13 +117,10 @@ class modQuoteAutoFollowups extends DolibarrModules
 			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
 			/* BEGIN MODULEBUILDER HOOKSCONTEXTS */
 			'hooks' => array(
-				   'data' => array(
-				       'productcard',
-					   'stockproductcard',
-				       'productcompositioncard',
-					   'productservicelist'
-				   ),
-				   'entity' => '0',
+				'data' => array(
+					'propalcard',
+				),
+				'entity' => '0',
 			),
 			/* END MODULEBUILDER HOOKSCONTEXTS */
 			// Set this to 1 if features of module are opened to external users
@@ -146,7 +143,7 @@ class modQuoteAutoFollowups extends DolibarrModules
 		$this->hidden = getDolGlobalInt('MODULE_quoteautofollowups_DISABLED'); // A condition to disable module;
 		// List of module class names that must be enabled if this module is enabled. Example: array('always'=>array('modModuleToEnable1','modModuleToEnable2'), 'FR'=>array('modModuleToEnableFR')...)
 		$this->depends = array(
-			'always' => array('modProduct', 'modStock'),
+			'always' => array('modPropale', 'modAgenda', 'modCron'),
 		);
 		// List of module class names to disable if this one is disabled. Example: array('modModuleToDisable1', ...)
 		$this->requiredby = array();
@@ -159,12 +156,12 @@ class modQuoteAutoFollowups extends DolibarrModules
 		// Prerequisites
 		$this->phpmin = array(7, 4); // Minimum version of PHP required by module
 		// $this->phpmax = array(8, 0); // Maximum version of PHP required by module
-		$this->need_dolibarr_version = array(18, 0); // Minimum version of Dolibarr required by module
+		$this->need_dolibarr_version = array(21, 0); // Minimum version of Dolibarr required by module
 		// $this->max_dolibarr_version = array(19, -3); // Maximum version of Dolibarr required by module
 		$this->need_javascript_ajax = 0;
 
 		// Messages at activation
-		$this->warnings_activation = array('EN'=>'Please check this condition', 'FR'=>'Merci de vérifier cette condition'); // Warning to show when we activate module. array('always'='text') or array('FR'='textfr','MX'='textmx'...)
+		$this->warnings_activation = array(); // Warning to show when we activate module. array('always'='text') or array('FR'='textfr','MX'='textmx'...)
 		$this->warnings_activation_ext = array(); // Warning to show when we activate an external module. array('always'='text') or array('FR'='textfr','MX'='textmx'...)
 		//$this->automatic_activation = array('FR'=>'quoteautofollowupsWasAutomaticallyActivatedBecauseOfYourCountryChoice');
 		//$this->always_enabled = true;								// If true, can't be disabled
@@ -174,7 +171,17 @@ class modQuoteAutoFollowups extends DolibarrModules
 		// Example: $this->const=array(1 => array('quoteautofollowups_MYNEWCONST1', 'chaine', 'myvalue', 'This is a constant to add', 1),
 		//                             2 => array('quoteautofollowups_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
 		// );
-		$this->const = array();
+		$this->const = array(
+			0 => array('QUOTEAUTOFOLLOWUPS_ENABLED', 'chaine', '0', 'Enable automatic follow-ups', 0),
+			1 => array('QUOTEAUTOFOLLOWUPS_MAX', 'chaine', '3', 'Maximum number of follow-ups per quote', 0),
+			2 => array('QUOTEAUTOFOLLOWUPS_DELAYS', 'chaine', '7,15,30', 'Delays in days between follow-ups', 0),
+			3 => array('QUOTEAUTOFOLLOWUPS_BATCH_SIZE', 'chaine', '10', 'Maximum number of emails sent per scheduled job run', 0),
+			4 => array('QUOTEAUTOFOLLOWUPS_SENDER', 'chaine', 'company', 'Sender of follow-up emails', 0),
+			5 => array('QUOTEAUTOFOLLOWUPS_HOUR_START', 'chaine', '9', 'Sending window start hour', 0),
+			6 => array('QUOTEAUTOFOLLOWUPS_HOUR_END', 'chaine', '18', 'Sending window end hour', 0),
+			7 => array('QUOTEAUTOFOLLOWUPS_WORKDAYS_ONLY', 'chaine', '1', 'Send follow-ups on working days only', 0),
+			8 => array('QUOTEAUTOFOLLOWUPS_BCC_MODE', 'chaine', 'none', 'Blind carbon copy of follow-up emails', 0),
+		);
 
 		// Some keys to add into the overwriting translation tables
 		/*$this->overwrite_translation = array(
@@ -269,6 +276,21 @@ class modQuoteAutoFollowups extends DolibarrModules
 		// unit_frequency must be 60 for minute, 3600 for hour, 86400 for day, 604800 for week
 		/* BEGIN MODULEBUILDER CRON */
 		$this->cronjobs = array(
+			0 => array(
+				// Plain text: the scheduled jobs list does not load module language files
+				'label' => 'Quote Auto Followups',
+				'jobtype' => 'method',
+				'class' => '/quoteautofollowups/class/quoteautofollowups.class.php',
+				'objectname' => 'QuoteAutoFollowups',
+				'method' => 'runScheduledFollowups',
+				'parameters' => '',
+				'comment' => 'Sends the follow-up emails of validated quotes that are due (see Quote Auto Followups module setup)',
+				'frequency' => 1,
+				'unitfrequency' => 3600,
+				'status' => 1,
+				'test' => 'isModEnabled("quoteautofollowups")',
+				'priority' => 50,
+			),
 			//  0 => array(
 			//      'label' => 'MyJob label',
 			//      'jobtype' => 'method',
@@ -295,24 +317,22 @@ class modQuoteAutoFollowups extends DolibarrModules
 		$r = 0;
 		// Add here entries to declare new permissions
 		/* BEGIN MODULEBUILDER PERMISSIONS */
-		/*
 		$o = 1;
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($o * 10) + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Read objects of quoteautofollowups'; // Permission label
-		$this->rights[$r][4] = 'myobject';
-		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->hasRight('quoteautofollowups', 'myobject', 'read'))
+		$this->rights[$r][1] = 'See follow-up information on quotes'; // Permission label
+		$this->rights[$r][4] = 'followup';
+		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->hasRight('quoteautofollowups', 'followup', 'read'))
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($o * 10) + 2); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Create/Update objects of quoteautofollowups'; // Permission label
-		$this->rights[$r][4] = 'myobject';
-		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->hasRight('quoteautofollowups', 'myobject', 'write'))
+		$this->rights[$r][1] = 'Send a follow-up email manually'; // Permission label
+		$this->rights[$r][4] = 'followup';
+		$this->rights[$r][5] = 'send'; // In php code, permission will be checked by test if ($user->hasRight('quoteautofollowups', 'followup', 'send'))
 		$r++;
 		$this->rights[$r][0] = $this->numero . sprintf("%02d", ($o * 10) + 3); // Permission id (must not be already used)
-		$this->rights[$r][1] = 'Delete objects of quoteautofollowups'; // Permission label
-		$this->rights[$r][4] = 'myobject';
-		$this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->hasRight('quoteautofollowups', 'myobject', 'delete'))
+		$this->rights[$r][1] = 'Change follow-up settings of a quote (do not follow up, date sent to customer)'; // Permission label
+		$this->rights[$r][4] = 'followup';
+		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->hasRight('quoteautofollowups', 'followup', 'write'))
 		$r++;
-		*/
 		/* END MODULEBUILDER PERMISSIONS */
 
 
@@ -470,27 +490,33 @@ class modQuoteAutoFollowups extends DolibarrModules
 	 */
 	public function init($options = '')
 	{
-		global $conf, $langs, $db;
-		
-		$result = dolibarr_set_const($db, 'quoteautofollowups_OPTION', 1);
-		if($result < 0) return $result;
+		global $conf, $langs;
 
-		// Create tables of module at module activation
-		//$result = $this->_load_tables('/install/mysql/', 'quoteautofollowups');
-		/*$result = $this->_load_tables('/quoteautofollowups/sql/');
-		if ($result < 0) {
-			return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
-		}*/
+		$langs->load("quoteautofollowups@quoteautofollowups");
+
+		// Leftover from the module template
+		dolibarr_del_const($this->db, 'quoteautofollowups_OPTION', $conf->entity);
 
 		// Create extrafields during init
-		// include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
-		// $extrafields = new ExtraFields($this->db);
-		// $result0=$extrafields->addExtraField('quoteautofollowups_option', "Quote Auto Followups", 'int', 1,  10, 'product',   0, 0, '0', '', 0, '', 5, 'Maximum Quote Auto Followups', '', '', 'quoteautofollowups@quoteautofollowups', 'isModEnabled("quoteautofollowups")');
-		//$result1=$extrafields->addExtraField('quoteautofollowups_myattr1', "New Attr 1 label", 'boolean', 1,  3, 'thirdparty',   0, 0, '', '', 1, '', -1, 0, '', '', 'quoteautofollowups@quoteautofollowups', 'isModEnabled("quoteautofollowups")');
-		//$result2=$extrafields->addExtraField('quoteautofollowups_myattr2', "New Attr 2 label", 'varchar', 1, 10, 'project',      0, 0, '', '', 1, '', -1, 0, '', '', 'quoteautofollowups@quoteautofollowups', 'isModEnabled("quoteautofollowups")');
-		//$result3=$extrafields->addExtraField('quoteautofollowups_myattr3', "New Attr 3 label", 'varchar', 1, 10, 'bank_account', 0, 0, '', '', 1, '', -1, 0, '', '', 'quoteautofollowups@quoteautofollowups', 'isModEnabled("quoteautofollowups")');
-		//$result4=$extrafields->addExtraField('quoteautofollowups_myattr4', "New Attr 4 label", 'select',  1,  3, 'thirdparty',   0, 1, '', array('options'=>array('code1'=>'Val1','code2'=>'Val2','code3'=>'Val3')), 1,'', -1, 0, '', '', 'quoteautofollowups@quoteautofollowups', 'isModEnabled("quoteautofollowups")');
-		//$result5=$extrafields->addExtraField('quoteautofollowups_myattr5', "New Attr 5 label", 'text',    1, 10, 'user',         0, 0, '', '', 1, '', -1, 0, '', '', 'quoteautofollowups@quoteautofollowups', 'isModEnabled("quoteautofollowups")');
+		// 'list' visibility: 4 = list + card (not on creation form), 5 = list + card, read-only.
+		// Negative values mean the column is available but not shown by default in the list.
+		// 'perms' only controls who can see the field: editing requires the proposal "creer" right, and
+		// ActionsQuoteAutoFollowups::doActions() additionally requires the module's 'write' right.
+		include_once DOL_DOCUMENT_ROOT.'/core/class/extrafields.class.php';
+		$extrafields = new ExtraFields($this->db);
+		$readperm = '$user->hasRight("quoteautofollowups", "followup", "read")';
+		$enabled = 'isModEnabled("quoteautofollowups")';
+		$langfile = 'quoteautofollowups@quoteautofollowups';
+		$extrafields->addExtraField('qaf_donotfollowup', 'QAFDoNotFollowup', 'boolean', 1001, '', 'propal', 0, 0, '', '', 1, $readperm, '4', 'QAFDoNotFollowupHelp', '', '', $langfile, $enabled);
+		$extrafields->addExtraField('qaf_sentdate', 'QAFSentDate', 'date', 1002, '', 'propal', 0, 0, '', '', 1, $readperm, '4', 'QAFSentDateHelp', '', '', $langfile, $enabled);
+		$extrafields->addExtraField('qaf_count', 'QAFCount', 'int', 1003, '10', 'propal', 0, 0, '0', '', 0, $readperm, '5', '', '', '', $langfile, $enabled);
+		$extrafields->addExtraField('qaf_lastdate', 'QAFLastDate', 'datetime', 1004, '', 'propal', 0, 0, '', '', 0, $readperm, '-5', '', '', '', $langfile, $enabled);
+		$extrafields->addExtraField('qaf_lasterror', 'QAFLastError', 'varchar', 1005, '255', 'propal', 0, 0, '', '', 0, $readperm, '5', '', '', '', $langfile, $enabled);
+
+		$result = $this->initEmailTemplate();
+		if ($result < 0) {
+			return $result;
+		}
 
 		// Permissions
 		$this->remove($options);
@@ -529,6 +555,54 @@ class modQuoteAutoFollowups extends DolibarrModules
 		}*/
 
 		return $this->_init($sql, $options);
+	}
+
+	/**
+	 * Create the default follow-up email template (Setup > Emails > Email templates, type "Commercial
+	 * proposals") on first activation, and select it in the module setup if none is selected yet.
+	 *
+	 * The template is written in the language of the admin activating the module, with lang = '' so it
+	 * is used for every customer language; other language variants can be added from the native editor.
+	 *
+	 * @return int<-1,1>	1 if OK, -1 if KO
+	 */
+	private function initEmailTemplate()
+	{
+		global $conf, $langs;
+
+		$sql = "SELECT rowid FROM ".$this->db->prefix()."c_email_templates";
+		$sql .= " WHERE module = 'quoteautofollowups' AND type_template = 'propal_send'";
+		$sql .= " AND entity = ".((int) $conf->entity);
+		$sql .= " ORDER BY rowid ASC";
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			$this->error = $this->db->lasterror();
+			return -1;
+		}
+		$obj = $this->db->fetch_object($resql);
+		$templateid = $obj ? (int) $obj->rowid : 0;
+		$this->db->free($resql);
+
+		if (!$templateid) {
+			$sql = "INSERT INTO ".$this->db->prefix()."c_email_templates";
+			$sql .= " (entity, module, type_template, lang, private, fk_user, datec, label, position, enabled, active, topic, content, content_lines, joinfiles)";
+			$sql .= " VALUES (".((int) $conf->entity).", 'quoteautofollowups', 'propal_send', '', 0, null, '".$this->db->idate(dol_now())."'";
+			$sql .= ", '".$this->db->escape($langs->transnoentitiesnoconv('QAFDefaultTemplateLabel'))."', 100, '".$this->db->escape('isModEnabled("quoteautofollowups")')."', 1";
+			$sql .= ", '".$this->db->escape($langs->transnoentitiesnoconv('QAFDefaultTemplateTopic'))."'";
+			$sql .= ", '".$this->db->escape($langs->transnoentitiesnoconv('QAFDefaultTemplateContent'))."'";
+			$sql .= ", null, 1)";
+			if (!$this->db->query($sql)) {
+				$this->error = $this->db->lasterror();
+				return -1;
+			}
+			$templateid = (int) $this->db->last_insert_id($this->db->prefix()."c_email_templates");
+		}
+
+		if (!getDolGlobalInt('QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE') && $templateid > 0) {
+			dolibarr_set_const($this->db, 'QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE', $templateid, 'chaine', 0, '', $conf->entity);
+		}
+
+		return 1;
 	}
 
 	/**

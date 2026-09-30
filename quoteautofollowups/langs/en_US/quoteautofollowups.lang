@@ -6,13 +6,129 @@ ModuleQuoteAutoFollowupsName = Quote Auto Followups
 ModuleQuoteAutoFollowupsDesc = Automatic follow-ups for commercial proposals
 
 #
+# Permissions
+#
+Permission34000911 = See follow-up information on quotes
+Permission34000912 = Send a follow-up email manually
+Permission34000913 = Change follow-up settings of a quote (do not follow up, date sent to customer)
+
+#
 # Admin page
 #
 QuoteAutoFollowupsSetup = Quote Auto Followups
-Settings = Settings
-QuoteAutoFollowupsSetupPage = Options
-QuoteAutoFollowupsLevelShort = Quote Auto Followups
-QuoteAutoFollowupsLevel = Total Quote Auto Followups
-QuoteAutoFollowupsLevelTip = Maxmimum number of Quote Auto Followups
-NA = N/A
-QuoteAutoFollowups_OPTION = Show Quote Auto Followups
+QuoteAutoFollowupsSetupPage = Automatically follows up validated quotes by email, with the PDF attached, to the quote's "Customer contact follow-up" contact. Requires the Scheduled jobs module and a valid sender email address.
+QAFSetupSectionSending = Automatic follow-ups
+QAFSetupSectionSchedule = Sending schedule
+QAFSetupSectionEmail = Follow-up email
+QUOTEAUTOFOLLOWUPS_ENABLED = Enable automatic sending of follow-ups
+QUOTEAUTOFOLLOWUPS_ENABLEDTooltip = If disabled, the scheduled job sends no follow-up. The "Follow up by email" button of quotes remains available.
+QUOTEAUTOFOLLOWUPS_MAX = Maximum number of automatic follow-ups per quote
+QUOTEAUTOFOLLOWUPS_MAXTooltip = Beyond this, the quote is no longer followed up automatically. Manual follow-ups are counted.
+QUOTEAUTOFOLLOWUPS_DELAYS = Follow-up delays (in days)
+QUOTEAUTOFOLLOWUPS_DELAYSTooltip = Comma separated list of delays. Example "7,15,30": 1st follow-up 7 days after the quote was sent to the customer (or validated), 2nd follow-up 15 days after the 1st, 3rd follow-up 30 days after the 2nd. The last delay is reused if the maximum number of follow-ups is higher.
+QUOTEAUTOFOLLOWUPS_START_DATE = Only follow up quotes validated from
+QUOTEAUTOFOLLOWUPS_START_DATETooltip = Quotes validated before this date are not followed up automatically. Set to the current date on activation, so that all older quotes are not followed up at once.
+QUOTEAUTOFOLLOWUPS_BATCH_SIZE = Maximum number of emails sent per run
+QUOTEAUTOFOLLOWUPS_BATCH_SIZETooltip = The scheduled job runs every hour. Pending follow-ups beyond this limit (sent and failed included) are handled by the next runs, most overdue first.
+QUOTEAUTOFOLLOWUPS_HOUR_START = Send from
+QUOTEAUTOFOLLOWUPS_HOUR_STARTTooltip = Server time. Outside the sending window, the scheduled job does nothing.
+QUOTEAUTOFOLLOWUPS_HOUR_END = Send until
+QUOTEAUTOFOLLOWUPS_HOUR_ENDTooltip = Server time (excluded). Outside the sending window, the scheduled job does nothing.
+QUOTEAUTOFOLLOWUPS_WORKDAYS_ONLY = Send from Monday to Friday only
+QUOTEAUTOFOLLOWUPS_SENDER = Sender email address
+QUOTEAUTOFOLLOWUPS_SENDERTooltip = "Sales representative of the quote" uses the email of the user with the "Sales representative following-up proposal" role on the quote, or else the default sender email (Setup > Emails).
+QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE = Follow-up email template
+QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATETooltip = Email templates of type "Commercial proposals" (Setup > Emails > Email templates). The variant in the customer's language is used if it exists (same label). The quote PDF is always attached.
+QUOTEAUTOFOLLOWUPS_BCC_MODE = Blind carbon copy of follow-ups
+QUOTEAUTOFOLLOWUPS_BCC_EMAIL = Blind carbon copy address
+QUOTEAUTOFOLLOWUPS_BCC_EMAILTooltip = Used when the blind carbon copy is "Fixed address".
+QAFBccNone = None
+QAFBccSalesRep = Sales representative of the quote
+QAFBccFixed = Fixed address
+QAFSenderCompany = Company email
+QAFSenderRobot = Default sender email
+QAFSenderSalesRep = Sales representative of the quote
+QAFSenderProfile = Sender profile:
+QAFErrorIntegerBetween = "%s" must be an integer between %s and %s.
+QAFErrorInvalidDelays = Follow-up delays must be a comma separated list of numbers of days greater than 0 (example: 7,15,30).
+QAFErrorBccEmailRequired = Enter the blind carbon copy address, or choose another blind carbon copy mode.
+QAFStartDateInitialized = Automatic follow-ups will only apply to quotes validated from %s. You can change this date.
+QAFWarningMailsDisabled = Sending emails is disabled in Dolibarr (MAIN_DISABLE_ALL_MAILS): no follow-up will actually be sent.
+QAFWarningCronDisabled = The "Quote Auto Followups" scheduled job is not active: automatic follow-ups will not be sent.
+QAFWarningNoCompanyEmail = No valid email address is set for the company.
+QAFWarningNoRobotEmail = No valid default sender email address is configured.
+QAFWarningNoTemplate = No follow-up email template is selected.
+QAFSubstitutionsTitle = Substitution variables
+QAFSubstitutionsHelp = Variables usable in the subject and content of the email template, in addition to all standard variables of commercial proposals.
+QAFEditEmailTemplates = Edit email templates of commercial proposals
+QAFSubstRef = Quote reference
+QAFSubstRefClient = Customer reference of the quote
+QAFSubstThirdpartyName = Third party name
+QAFSubstContactCivName = Title and name of the follow-up contact
+QAFSubstExpirationDate = End of validity date of the quote
+QAFSubstOnlineSignUrl = Online signature link of the quote
+QAFSubstFollowupNumber = Follow-up number (1, 2, 3...)
+QAFSubstMyCompanyName = Your company name
+QAFSubstSenderSignature = Sender signature (sender profile or sales representative)
+
+#
+# Default email template (created on module activation)
+#
+QAFDefaultTemplateLabel = Quote follow-up
+QAFDefaultTemplateTopic = Follow-up - Commercial proposal __REF__
+QAFDefaultTemplateContent = Hello __CONTACTCIVNAME__,<br><br>We are following up on our commercial proposal <b>__REF__</b>, valid until __EXPIRATION_DATE__, which you will find attached again.<br><br>Please do not hesitate to contact us with any question or to proceed with this proposal.<br><br>Best regards,<br><br>__MYCOMPANY_NAME__<br>__SENDEREMAIL_SIGNATURE__
+
+#
+# Quote extrafields
+#
+QAFDoNotFollowup = Do not follow up
+QAFDoNotFollowupHelp = If checked, this quote is not followed up automatically.
+QAFSentDate = Sent to customer on
+QAFSentDateHelp = Starting point of follow-ups. Filled automatically when the quote is sent by email from Dolibarr; enter it if the quote was sent another way (other mail client, post...). If empty, the validation date is used.
+QAFCount = Nb follow-ups
+QAFLastDate = Last follow-up
+QAFLastError = Last follow-up error
+
+#
+# Quote card
+#
+QAFSendFollowupButton = Follow up by email
+QAFConfirmSendFollowupTitle = Follow up by email
+QAFConfirmSendFollowup = Send follow-up no. %s of this quote, with the PDF attached, to: %s?
+QAFFollowupSent = Follow-up sent.
+QAFFollowupFailed = The follow-up could not be sent: %s
+QAFNextFollowup = Next follow-up
+QAFNextFollowupOverdue = At the next run (due on %s)
+QAFStopClosed = None: quote signed, refused or billed
+QAFStopNotValidated = None: quote not validated
+QAFStopExpired = None: validity date passed
+QAFStopDoNotFollowup = None: "Do not follow up" is checked
+QAFStopMaxReached = None: maximum number of follow-ups reached
+QAFStopBeforeStartDate = None: quote validated before the start date of automatic follow-ups
+QAFStopAutoDisabled = automatic follow-ups disabled
+
+#
+# Errors of a follow-up
+#
+QAFErrorNoFollowupContact = No "Customer contact follow-up" contact is set on the quote.
+QAFErrorNoValidEmail = No "Customer contact follow-up" contact of the quote has a valid email address.
+QAFErrorNoSender = No valid sender email address is configured.
+QAFErrorNoTemplate = The follow-up email template cannot be found.
+QAFErrorNoPdf = The quote PDF cannot be found and could not be generated.
+QAFErrorSendFailed = Failed to send the email: %s
+
+#
+# Agenda events
+#
+QAFEventSentLabel = Automatic follow-up no. %s of quote %s sent by email
+QAFEventSentManualLabel = Follow-up no. %s of quote %s sent by email
+QAFEventFailedLabel = Automatic follow-up of quote %s failed
+QAFEventFailedManualLabel = Follow-up of quote %s failed
+
+#
+# Scheduled job
+#
+QAFCronAutoDisabled = Automatic follow-ups disabled in the module setup.
+QAFCronOutsideWindow = Outside the configured sending window: no follow-up sent.
+QAFCronSummary = Follow-ups sent: %s, failed: %s, skipped: %s, left to process: %s
+QAFSent = follow-up sent

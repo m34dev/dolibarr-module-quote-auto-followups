@@ -6,13 +6,129 @@ ModuleQuoteAutoFollowupsName = Quote Auto Followups
 ModuleQuoteAutoFollowupsDesc = Relances automatiques des propositions commerciales
 
 #
+# Permissions
+#
+Permission34000911 = Voir les informations de relance des devis
+Permission34000912 = Relancer un devis manuellement par email
+Permission34000913 = Modifier les paramètres de relance d'un devis (ne pas relancer, date d'envoi au client)
+
+#
 # Admin page
 #
 QuoteAutoFollowupsSetup = Quote Auto Followups
-Settings = Settings
-QuoteAutoFollowupsSetupPage = Options
-QuoteAutoFollowupsLevelShort = Quote Auto Followups
-QuoteAutoFollowupsLevel = Total Quote Auto Followups
-QuoteAutoFollowupsLevelTip = Nombre maximum de Quote Auto Followups
-NA = N/A
-QuoteAutoFollowups_OPTION = Afficher Quote Auto Followups
+QuoteAutoFollowupsSetupPage = Relance automatiquement par email, avec le PDF en pièce jointe, les devis validés auprès du contact « Contact client suivi propale » du devis. Nécessite le module Travaux planifiés actif et une adresse email d'émission valide.
+QAFSetupSectionSending = Relances automatiques
+QAFSetupSectionSchedule = Planification des envois
+QAFSetupSectionEmail = Email de relance
+QUOTEAUTOFOLLOWUPS_ENABLED = Activer l'envoi automatique des relances
+QUOTEAUTOFOLLOWUPS_ENABLEDTooltip = Si désactivé, le travail planifié n'envoie aucune relance. Le bouton « Relancer par email » des devis reste disponible.
+QUOTEAUTOFOLLOWUPS_MAX = Nombre maximum de relances automatiques par devis
+QUOTEAUTOFOLLOWUPS_MAXTooltip = Au-delà, le devis n'est plus relancé automatiquement. Les relances manuelles sont comptées.
+QUOTEAUTOFOLLOWUPS_DELAYS = Délais de relance (en jours)
+QUOTEAUTOFOLLOWUPS_DELAYSTooltip = Liste de délais séparés par des virgules. Exemple « 7,15,30 » : 1ère relance 7 jours après l'envoi du devis au client (ou sa validation), 2e relance 15 jours après la 1ère, 3e relance 30 jours après la 2e. Le dernier délai est réutilisé si le nombre maximum de relances est plus grand.
+QUOTEAUTOFOLLOWUPS_START_DATE = Relancer uniquement les devis validés à partir du
+QUOTEAUTOFOLLOWUPS_START_DATETooltip = Les devis validés avant cette date ne sont pas relancés automatiquement. Renseignée automatiquement avec la date du jour lors de l'activation, pour ne pas relancer d'un coup tous les anciens devis.
+QUOTEAUTOFOLLOWUPS_BATCH_SIZE = Nombre maximum d'emails envoyés par exécution
+QUOTEAUTOFOLLOWUPS_BATCH_SIZETooltip = Le travail planifié s'exécute toutes les heures. Les relances en attente au-delà de cette limite (envois et échecs compris) sont traitées aux exécutions suivantes, les plus en retard d'abord.
+QUOTEAUTOFOLLOWUPS_HOUR_START = Envoyer à partir de
+QUOTEAUTOFOLLOWUPS_HOUR_STARTTooltip = Heure du serveur. En dehors de la plage d'envoi, le travail planifié ne fait rien.
+QUOTEAUTOFOLLOWUPS_HOUR_END = Envoyer jusqu'à
+QUOTEAUTOFOLLOWUPS_HOUR_ENDTooltip = Heure du serveur (exclue). En dehors de la plage d'envoi, le travail planifié ne fait rien.
+QUOTEAUTOFOLLOWUPS_WORKDAYS_ONLY = Envoyer uniquement du lundi au vendredi
+QUOTEAUTOFOLLOWUPS_SENDER = Adresse email d'émission
+QUOTEAUTOFOLLOWUPS_SENDERTooltip = « Commercial suivi du devis » utilise l'email du commercial ayant le rôle « Commercial suivi propale » sur le devis, ou à défaut l'email d'envoi par défaut (Configuration > Emails).
+QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE = Modèle d'email de relance
+QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATETooltip = Modèles d'email de type « Propositions commerciales » (Configuration > Emails > Modèles d'emails). La variante dans la langue du client est utilisée si elle existe (même libellé). Le PDF du devis est toujours joint.
+QUOTEAUTOFOLLOWUPS_BCC_MODE = Copie cachée des relances
+QUOTEAUTOFOLLOWUPS_BCC_EMAIL = Adresse de copie cachée
+QUOTEAUTOFOLLOWUPS_BCC_EMAILTooltip = Utilisée lorsque la copie cachée est « Adresse fixe ».
+QAFBccNone = Aucune
+QAFBccSalesRep = Commercial suivi du devis
+QAFBccFixed = Adresse fixe
+QAFSenderCompany = Email de la société
+QAFSenderRobot = Email d'envoi par défaut
+QAFSenderSalesRep = Commercial suivi du devis
+QAFSenderProfile = Profil d'expéditeur :
+QAFErrorIntegerBetween = « %s » doit être un nombre entier entre %s et %s.
+QAFErrorInvalidDelays = Les délais de relance doivent être une liste de nombres de jours supérieurs à 0, séparés par des virgules (exemple : 7,15,30).
+QAFErrorBccEmailRequired = Renseignez l'adresse de copie cachée, ou choisissez un autre mode de copie cachée.
+QAFStartDateInitialized = Les relances automatiques ne concerneront que les devis validés à partir du %s. Vous pouvez modifier cette date.
+QAFWarningMailsDisabled = L'envoi des emails est désactivé dans Dolibarr (MAIN_DISABLE_ALL_MAILS) : aucune relance ne sera réellement envoyée.
+QAFWarningCronDisabled = Le travail planifié « Quote Auto Followups » n'est pas actif : les relances automatiques ne seront pas envoyées.
+QAFWarningNoCompanyEmail = Aucune adresse email valide n'est renseignée pour la société.
+QAFWarningNoRobotEmail = Aucune adresse email d'envoi par défaut valide n'est configurée.
+QAFWarningNoTemplate = Aucun modèle d'email de relance n'est sélectionné.
+QAFSubstitutionsTitle = Variables de substitution
+QAFSubstitutionsHelp = Variables utilisables dans le sujet et le contenu du modèle d'email, en plus de toutes les variables standard des propositions commerciales.
+QAFEditEmailTemplates = Modifier les modèles d'emails des propositions commerciales
+QAFSubstRef = Référence du devis
+QAFSubstRefClient = Référence client du devis
+QAFSubstThirdpartyName = Nom du tiers
+QAFSubstContactCivName = Civilité et nom du contact suivi
+QAFSubstExpirationDate = Date de fin de validité du devis
+QAFSubstOnlineSignUrl = Lien de signature en ligne du devis
+QAFSubstFollowupNumber = Numéro de la relance (1, 2, 3...)
+QAFSubstMyCompanyName = Nom de votre société
+QAFSubstSenderSignature = Signature de l'expéditeur (profil d'expéditeur ou commercial)
+
+#
+# Default email template (created on module activation)
+#
+QAFDefaultTemplateLabel = Relance devis
+QAFDefaultTemplateTopic = Relance - Proposition commerciale __REF__
+QAFDefaultTemplateContent = Bonjour __CONTACTCIVNAME__,<br><br>Nous revenons vers vous concernant notre proposition commerciale <b>__REF__</b>, valable jusqu'au __EXPIRATION_DATE__, que vous trouverez à nouveau en pièce jointe.<br><br>N'hésitez pas à nous contacter pour toute question ou pour donner suite à cette proposition.<br><br>Bien cordialement,<br><br>__MYCOMPANY_NAME__<br>__SENDEREMAIL_SIGNATURE__
+
+#
+# Quote extrafields
+#
+QAFDoNotFollowup = Ne pas relancer
+QAFDoNotFollowupHelp = Si coché, ce devis n'est pas relancé automatiquement.
+QAFSentDate = Envoyé au client le
+QAFSentDateHelp = Point de départ des relances. Renseigné automatiquement lors de l'envoi du devis par email depuis Dolibarr ; à saisir si le devis a été envoyé autrement (autre messagerie, courrier...). Si vide, la date de validation est utilisée.
+QAFCount = Nb relances
+QAFLastDate = Dernière relance
+QAFLastError = Dernière erreur de relance
+
+#
+# Quote card
+#
+QAFSendFollowupButton = Relancer par email
+QAFConfirmSendFollowupTitle = Relancer par email
+QAFConfirmSendFollowup = Envoyer la relance n°%s de ce devis, avec le PDF en pièce jointe, à : %s ?
+QAFFollowupSent = Relance envoyée.
+QAFFollowupFailed = La relance n'a pas pu être envoyée : %s
+QAFNextFollowup = Prochaine relance
+QAFNextFollowupOverdue = À la prochaine exécution (prévue le %s)
+QAFStopClosed = Aucune : devis signé, refusé ou facturé
+QAFStopNotValidated = Aucune : devis non validé
+QAFStopExpired = Aucune : date de validité dépassée
+QAFStopDoNotFollowup = Aucune : « Ne pas relancer » est coché
+QAFStopMaxReached = Aucune : nombre maximum de relances atteint
+QAFStopBeforeStartDate = Aucune : devis validé avant la date de début des relances automatiques
+QAFStopAutoDisabled = relances automatiques désactivées
+
+#
+# Errors of a follow-up
+#
+QAFErrorNoFollowupContact = Aucun contact « Contact client suivi propale » n'est renseigné sur le devis.
+QAFErrorNoValidEmail = Aucun contact « Contact client suivi propale » du devis n'a d'adresse email valide.
+QAFErrorNoSender = Aucune adresse email d'émission valide n'est configurée.
+QAFErrorNoTemplate = Le modèle d'email de relance est introuvable.
+QAFErrorNoPdf = Le PDF du devis est introuvable et n'a pas pu être généré.
+QAFErrorSendFailed = Échec de l'envoi de l'email : %s
+
+#
+# Agenda events
+#
+QAFEventSentLabel = Relance automatique n°%s du devis %s envoyée par email
+QAFEventSentManualLabel = Relance n°%s du devis %s envoyée par email
+QAFEventFailedLabel = Échec de la relance automatique du devis %s
+QAFEventFailedManualLabel = Échec de la relance du devis %s
+
+#
+# Scheduled job
+#
+QAFCronAutoDisabled = Relances automatiques désactivées dans la configuration du module.
+QAFCronOutsideWindow = En dehors de la plage d'envoi configurée : aucune relance envoyée.
+QAFCronSummary = Relances envoyées : %s, échecs : %s, ignorées : %s, restant à traiter : %s
+QAFSent = relance envoyée
