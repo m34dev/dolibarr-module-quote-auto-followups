@@ -91,6 +91,10 @@ function quoteAutoFollowupsGetSetupWarnings($db, $helper)
 	if (getDolGlobalString('MAIN_DISABLE_ALL_MAILS')) {
 		$warnings[] = $langs->trans('QAFWarningMailsDisabled');
 	}
+	if (getDolGlobalString('MAIN_MAIL_FORCE_SENDTO')) {
+		// CMailFile then sends everything to this address and drops cc/bcc
+		$warnings[] = $langs->trans('QAFWarningMailsForcedTo', getDolGlobalString('MAIN_MAIL_FORCE_SENDTO'));
+	}
 
 	// Scheduled job declared by the module descriptor, which the admin may have disabled
 	$sql = "SELECT COUNT(rowid) as nb FROM ".$db->prefix()."cronjob";

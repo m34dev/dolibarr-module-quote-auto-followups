@@ -54,6 +54,7 @@ QAFErrorInvalidDelays = Follow-up delays must be a comma separated list of numbe
 QAFErrorBccEmailRequired = Enter the blind carbon copy address, or choose another blind carbon copy mode.
 QAFStartDateInitialized = Automatic follow-ups will only apply to quotes validated from %s. You can change this date.
 QAFWarningMailsDisabled = Sending emails is disabled in Dolibarr (MAIN_DISABLE_ALL_MAILS): no follow-up will actually be sent.
+QAFWarningMailsForcedTo = All emails are redirected to %s (MAIN_MAIL_FORCE_SENDTO): follow-ups are not sent to the quote contacts and the blind carbon copy is dropped.
 QAFWarningCronDisabled = The "Quote Auto Followups" scheduled job is not active: automatic follow-ups will not be sent.
 QAFWarningNoCompanyEmail = No valid email address is set for the company.
 QAFWarningNoRobotEmail = No valid default sender email address is configured.

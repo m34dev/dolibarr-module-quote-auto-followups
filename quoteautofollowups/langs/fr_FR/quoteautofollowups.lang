@@ -54,6 +54,7 @@ QAFErrorInvalidDelays = Les délais de relance doivent être une liste de nombre
 QAFErrorBccEmailRequired = Renseignez l'adresse de copie cachée, ou choisissez un autre mode de copie cachée.
 QAFStartDateInitialized = Les relances automatiques ne concerneront que les devis validés à partir du %s. Vous pouvez modifier cette date.
 QAFWarningMailsDisabled = L'envoi des emails est désactivé dans Dolibarr (MAIN_DISABLE_ALL_MAILS) : aucune relance ne sera réellement envoyée.
+QAFWarningMailsForcedTo = Tous les emails sont redirigés vers %s (MAIN_MAIL_FORCE_SENDTO) : les relances ne partent pas aux contacts des devis et la copie cachée est supprimée.
 QAFWarningCronDisabled = Le travail planifié « Quote Auto Followups » n'est pas actif : les relances automatiques ne seront pas envoyées.
 QAFWarningNoCompanyEmail = Aucune adresse email valide n'est renseignée pour la société.
 QAFWarningNoRobotEmail = Aucune adresse email d'envoi par défaut valide n'est configurée.
