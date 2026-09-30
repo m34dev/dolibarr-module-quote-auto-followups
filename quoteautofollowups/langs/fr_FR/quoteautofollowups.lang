@@ -1,7 +1,7 @@
 # Translation file
 
 # Module label 'ModuleQuoteAutoFollowupsName'
-ModuleQuoteAutoFollowupsName = Quote Auto Followups
+ModuleQuoteAutoFollowupsName = Relance automatique devis
 # Module description 'ModuleQuoteAutoFollowupsDesc'
 ModuleQuoteAutoFollowupsDesc = Relances automatiques des propositions commerciales
 
@@ -15,7 +15,7 @@ Permission34000913 = Modifier les paramètres de relance d'un devis (ne pas rela
 #
 # Admin page
 #
-QuoteAutoFollowupsSetup = Quote Auto Followups
+QuoteAutoFollowupsSetup = Relance automatique devis
 QuoteAutoFollowupsSetupPage = Relance automatiquement par email, avec le PDF en pièce jointe, les devis validés auprès du contact « Contact client suivi propale » du devis. Nécessite le module Travaux planifiés actif et une adresse email d'émission valide.
 QAFSetupSectionSending = Relances automatiques
 QAFSetupSectionSchedule = Planification des envois
@@ -38,7 +38,7 @@ QUOTEAUTOFOLLOWUPS_WORKDAYS_ONLY = Envoyer uniquement du lundi au vendredi
 QUOTEAUTOFOLLOWUPS_SENDER = Adresse email d'émission
 QUOTEAUTOFOLLOWUPS_SENDERTooltip = « Commercial suivi du devis » utilise l'email du commercial ayant le rôle « Commercial suivi propale » sur le devis, ou à défaut l'email d'envoi par défaut (Configuration > Emails).
 QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE = Modèle d'email de relance
-QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATETooltip = Modèles d'email de type « Propositions commerciales » (Configuration > Emails > Modèles d'emails). La variante dans la langue du client est utilisée si elle existe (même libellé). Le PDF du devis est toujours joint.
+QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATETooltip = Modèles d'email de type « Propositions commerciales » (Configuration > Emails > Modèles d'emails). La variante dans la langue du client est utilisée si elle existe (même libellé). Le PDF du devis est toujours joint. Seuls les modèles publics sont proposés : la tâche planifiée ne peut pas utiliser un modèle privé.
 QUOTEAUTOFOLLOWUPS_BCC_MODE = Copie cachée des relances
 QUOTEAUTOFOLLOWUPS_BCC_EMAIL = Adresse de copie cachée
 QUOTEAUTOFOLLOWUPS_BCC_EMAILTooltip = Utilisée lorsque la copie cachée est « Adresse fixe ».
@@ -59,6 +59,8 @@ QAFWarningCronDisabled = Le travail planifié « Quote Auto Followups » n'est p
 QAFWarningNoCompanyEmail = Aucune adresse email valide n'est renseignée pour la société.
 QAFWarningNoRobotEmail = Aucune adresse email d'envoi par défaut valide n'est configurée.
 QAFWarningNoTemplate = Aucun modèle d'email de relance n'est sélectionné.
+QAFWarningTemplateUnavailable = Le modèle d'email de relance sélectionné n'existe plus, est désactivé ou est privé. Sélectionnez-en un autre.
+QAFWarningSenderProfileUnavailable = Le profil d'expéditeur sélectionné n'existe plus, est désactivé, est privé ou n'a pas d'adresse email valide. Sélectionnez un autre expéditeur.
 QAFSubstitutionsTitle = Variables de substitution
 QAFSubstitutionsHelp = Variables utilisables dans le sujet et le contenu du modèle d'email, en plus de toutes les variables standard des propositions commerciales.
 QAFEditEmailTemplates = Modifier les modèles d'emails des propositions commerciales

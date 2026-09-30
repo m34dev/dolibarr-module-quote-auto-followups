@@ -183,7 +183,7 @@ class QuoteAutoFollowups
 	{
 		$value = getDolGlobalString('QUOTEAUTOFOLLOWUPS_START_DATE');
 		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $reg)) {
-			return (int) dol_mktime(0, 0, 0, (int) $reg[2], (int) $reg[3], (int) $reg[1]);
+			return (int) dol_mktime(0, 0, 0, (int) $reg[2], (int) $reg[3], (int) $reg[1], 'tzserver');
 		}
 		return 0;
 	}
@@ -304,11 +304,11 @@ class QuoteAutoFollowups
 	{
 		$options = is_array($object->array_options) ? $object->array_options : array();
 		return array(
-			'donotfollowup' => (int) (empty($options['options_qaf_donotfollowup']) ? 0 : $options['options_qaf_donotfollowup']),
-			'count' => (int) (empty($options['options_qaf_count']) ? 0 : $options['options_qaf_count']),
-			'sentdate' => $this->toTimestamp(empty($options['options_qaf_sentdate']) ? 0 : $options['options_qaf_sentdate']),
-			'lastdate' => $this->toTimestamp(empty($options['options_qaf_lastdate']) ? 0 : $options['options_qaf_lastdate']),
-			'lasterror' => (string) (empty($options['options_qaf_lasterror']) ? '' : $options['options_qaf_lasterror']),
+			'donotfollowup' => (int) ($options['options_qaf_donotfollowup'] ?? 0),
+			'count' => (int) ($options['options_qaf_count'] ?? 0),
+			'sentdate' => $this->toTimestamp($options['options_qaf_sentdate'] ?? 0),
+			'lastdate' => $this->toTimestamp($options['options_qaf_lastdate'] ?? 0),
+			'lasterror' => (string) ($options['options_qaf_lasterror'] ?? ''),
 		);
 	}
 
@@ -461,6 +461,30 @@ class QuoteAutoFollowups
 	}
 
 	/**
+	 * Active public sender profile (Setup > Emails > Sender profiles), as offered by getSenderOptions().
+	 *
+	 * @param	int		$id		Sender profile id
+	 * @return	array{email:string,name:string,signature:string}|null	Null if not found, disabled or private
+	 */
+	public function getSenderProfile($id)
+	{
+		$sql = "SELECT label, email, signature FROM ".$this->db->prefix()."c_email_senderprofile";
+		$sql .= " WHERE rowid = ".((int) $id)." AND active = 1 AND (private = 0 OR private IS NULL)";
+		$sql .= " AND entity IN (".getEntity('c_email_senderprofile').")";
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_syslog(__METHOD__.' '.$this->db->lasterror(), LOG_ERR);
+			return null;
+		}
+		$obj = $this->db->fetch_object($resql);
+		$this->db->free($resql);
+		if (!$obj) {
+			return null;
+		}
+		return array('email' => (string) $obj->email, 'name' => (string) $obj->label, 'signature' => (string) $obj->signature);
+	}
+
+	/**
 	 * Resolve the configured sender of follow-up emails for a quote. Same sources as the sender
 	 * selector of Dolibarr's email form (core/actions_sendmails.inc.php).
 	 *
@@ -482,12 +506,7 @@ class QuoteAutoFollowups
 				$mode = 'robot'; // No sales representative with an email: fall back on the default sender
 			}
 		} elseif (preg_match('/^senderprofile_(\d+)$/', $mode, $reg)) {
-			$sql = "SELECT label, email, signature FROM ".$this->db->prefix()."c_email_senderprofile";
-			$sql .= " WHERE rowid = ".((int) $reg[1])." AND active = 1";
-			$resql = $this->db->query($sql);
-			if ($resql && ($obj = $this->db->fetch_object($resql))) {
-				$sender = array('email' => $obj->email, 'name' => $obj->label, 'signature' => (string) $obj->signature);
-			}
+			$sender = $this->getSenderProfile((int) $reg[1]);
 		}
 
 		if ($mode == 'company') {
@@ -581,36 +600,124 @@ class QuoteAutoFollowups
 	}
 
 	/**
+	 * SQL filter of the email templates usable for follow-ups: active public templates of commercial
+	 * proposals. Private templates are excluded because the scheduled job runs as another user than the
+	 * one who selected the template, and would not see it.
+	 *
+	 * @return	string
+	 */
+	private function getTemplateSqlFilter()
+	{
+		$sql = " WHERE type_template IN ('propal_send', 'all')";
+		$sql .= " AND active = 1 AND private = 0";
+		$sql .= " AND entity IN (".getEntity('c_email_templates').")";
+		return $sql;
+	}
+
+	/**
+	 * Email templates offered in the module setup, one per label: language variants of a template share
+	 * its label, and the variant matching the customer's language is chosen when sending.
+	 *
+	 * @return	array<int,string>	Template id => label
+	 */
+	public function getTemplateOptions()
+	{
+		global $langs;
+
+		$selectedid = getDolGlobalInt('QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE');
+
+		$sql = "SELECT rowid, label, module FROM ".$this->db->prefix()."c_email_templates";
+		$sql .= $this->getTemplateSqlFilter();
+		$sql .= " ORDER BY position ASC, label ASC, rowid ASC";
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_syslog(__METHOD__.' '.$this->db->lasterror(), LOG_ERR);
+			return array();
+		}
+
+		$idbylabel = array();
+		$nbbylabel = array();
+		while ($obj = $this->db->fetch_object($resql)) {
+			if (!empty($obj->module) && !isModEnabled($obj->module)) {
+				continue;
+			}
+			// Keep the configured variant if it is one of them, so the select shows the current value
+			if (!isset($idbylabel[$obj->label]) || (int) $obj->rowid == $selectedid) {
+				$idbylabel[$obj->label] = (int) $obj->rowid;
+			}
+			$nbbylabel[$obj->label] = ($nbbylabel[$obj->label] ?? 0) + 1;
+		}
+		$this->db->free($resql);
+
+		$options = array();
+		foreach ($idbylabel as $label => $id) {
+			$options[$id] = $langs->trans(preg_replace('/\(|\)/', '', $label));
+			if ($nbbylabel[$label] > 1) {
+				$options[$id] .= ' ('.$langs->trans('SeveralLangugeVariatFound').')';
+			}
+		}
+		return $options;
+	}
+
+	/**
 	 * Load the configured email template, in the customer's language when a variant with the same label
 	 * exists for it (templates are grouped by label in Setup > Emails > Email templates).
 	 *
-	 * @param	User		$user			User (private templates visibility)
+	 * Variant priority: customer language (e.g. es_MX), then its main language (es_ES), then the variant
+	 * without language, then the configured template itself. Dolibarr's own lookup sorts on position
+	 * before language, which could pick the variant without language over the customer's one.
+	 *
 	 * @param	Translate	$outputlangs	Customer language
-	 * @return	ModelMail|null
+	 * @return	object{topic:string,content:string}|null	Null if the configured template is missing, disabled or private
 	 */
-	private function getEmailTemplate(User $user, $outputlangs)
+	private function getEmailTemplate($outputlangs)
 	{
-		include_once DOL_DOCUMENT_ROOT.'/core/class/html.formmail.class.php';
-
 		$templateid = getDolGlobalInt('QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE');
 		if ($templateid <= 0) {
 			return null;
 		}
 
-		$formmail = new FormMail($this->db);
-		$template = $formmail->getEMailTemplate($this->db, 'propal_send', $user, $outputlangs, $templateid);
-		if (!is_object($template) || empty($template->id)) {
+		$lang = (is_object($outputlangs) ? (string) $outputlangs->defaultlang : '');
+		$tmp = explode('_', $lang);
+		$mainlang = ($tmp[0] ? $tmp[0].'_'.strtoupper($tmp[0]) : '');
+
+		$sql = "SELECT t.rowid, t.lang, t.topic, t.content FROM ".$this->db->prefix()."c_email_templates as t";
+		$sql .= $this->getTemplateSqlFilter();
+		$sql .= " AND label = (SELECT t2.label FROM ".$this->db->prefix()."c_email_templates as t2 WHERE t2.rowid = ".((int) $templateid).")";
+		$sql .= " ORDER BY position ASC, rowid ASC";
+		$resql = $this->db->query($sql);
+		if (!$resql) {
+			dol_syslog(__METHOD__.' '.$this->db->lasterror(), LOG_ERR);
 			return null;
 		}
 
-		if (!empty($template->label)) {
-			$translated = $formmail->getEMailTemplate($this->db, 'propal_send', $user, $outputlangs, -2, 1, $template->label);
-			if (is_object($translated) && !empty($translated->id)) {
-				$template = $translated;
+		$template = null;
+		$bestscore = -1;
+		$found = false;
+		while ($obj = $this->db->fetch_object($resql)) {
+			if ((int) $obj->rowid == $templateid) {
+				$found = true;
+			}
+			if ($lang !== '' && $obj->lang == $lang) {
+				$score = 3;
+			} elseif ($mainlang !== '' && $obj->lang == $mainlang) {
+				$score = 2;
+			} elseif (empty($obj->lang)) {
+				$score = 1;
+			} elseif ((int) $obj->rowid == $templateid) {
+				$score = 0;
+			} else {
+				continue; // Variant in another language
+			}
+			if ($score > $bestscore) {
+				$bestscore = $score;
+				$template = $obj;
 			}
 		}
+		$this->db->free($resql);
 
-		return $template;
+		// The configured template itself must still be usable (active and public)
+		return $found ? $template : null;
 	}
 
 	/**
@@ -653,7 +760,7 @@ class QuoteAutoFollowups
 			return $this->recordFailure($object, $user, $langs->transnoentitiesnoconv('QAFErrorNoSender'), $manual);
 		}
 
-		$template = $this->getEmailTemplate($user, $outputlangs);
+		$template = $this->getEmailTemplate($outputlangs);
 		if (empty($template)) {
 			return $this->recordFailure($object, $user, $langs->transnoentitiesnoconv('QAFErrorNoTemplate'), $manual);
 		}

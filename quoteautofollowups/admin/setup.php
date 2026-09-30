@@ -55,7 +55,6 @@ if (!$res) {
 
 // Libraries
 require_once DOL_DOCUMENT_ROOT."/core/lib/admin.lib.php";
-require_once DOL_DOCUMENT_ROOT.'/core/lib/modulebuilder.lib.php';
 require_once '../lib/quoteautofollowups.lib.php';
 require_once '../class/quoteautofollowups.class.php';
 
@@ -77,9 +76,7 @@ $hookmanager->initHooks(array('quoteautofollowupssetup', 'globalsetup'));
 // Parameters
 $action = GETPOST('action', 'aZ09');
 $backtopage = GETPOST('backtopage', 'alpha');
-$modulepart = GETPOST('modulepart', 'aZ09');	// Used by actions_setmoduleoptions.inc.php
 
-$error = 0;
 $setupnotempty = 0;
 
 // Access control
@@ -87,9 +84,6 @@ if (!$user->admin) {
 	accessforbidden();
 }
 
-
-// Set this to 1 to use the factory to manage constants. Warning, the generated module will be compatible with version v15+ only
-$useFormSetup = 1;
 
 if (!class_exists('FormSetup')) {
 	require_once DOL_DOCUMENT_ROOT.'/core/class/html.formsetup.class.php';
@@ -136,8 +130,8 @@ $delaysitem->setValueFromPostCallBack(function () use ($delaysitem) {
 
 $startdateitem = $formSetup->newItem('QUOTEAUTOFOLLOWUPS_START_DATE');
 $startdate = $helper->getStartDate();
-$startdateitem->fieldInputOverride = $form->selectDate($startdate ? $startdate : -1, 'QUOTEAUTOFOLLOWUPS_START_DATE', 0, 0, 1, '', 1, 1);
-$startdateitem->fieldOutputOverride = ($startdate ? dol_print_date($startdate, 'day') : '');
+$startdateitem->fieldInputOverride = $form->selectDate($startdate ? $startdate : -1, 'QUOTEAUTOFOLLOWUPS_START_DATE', 0, 0, 1, '', 1, 1, 0, '', '', '', '', 1, '', '', 'tzserver');
+$startdateitem->fieldOutputOverride = ($startdate ? dol_print_date($startdate, 'day', 'tzserver') : '');
 $startdateitem->setValueFromPostCallBack(function () use ($startdateitem) {
 	$year = GETPOSTINT('QUOTEAUTOFOLLOWUPS_START_DATEyear');
 	$month = GETPOSTINT('QUOTEAUTOFOLLOWUPS_START_DATEmonth');
@@ -175,7 +169,9 @@ $senderitem->setAsSelect($helper->getSenderOptions());
 $senderitem->defaultFieldValue = 'company';
 
 $templateitem = $formSetup->newItem('QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE');
-$templateitem->setAsEmailTemplate('propal_send');
+// Not setAsEmailTemplate(): it also lists the private templates of the current user, which the
+// scheduled job (running as another user) could not use.
+$templateitem->setAsSelect(array(0 => $langs->trans('None')) + $helper->getTemplateOptions());
 
 $bccmodeitem = $formSetup->newItem('QUOTEAUTOFOLLOWUPS_BCC_MODE');
 $bccmodeitem->setAsSelect(array(
@@ -215,8 +211,8 @@ if ($action == 'update') {
 	// When automatic follow-ups are switched on without a start date, start from today: otherwise every
 	// old validated quote still within its validity would be followed up at once.
 	if ($result > 0 && getDolGlobalInt('QUOTEAUTOFOLLOWUPS_ENABLED') && !getDolGlobalString('QUOTEAUTOFOLLOWUPS_START_DATE')) {
-		dolibarr_set_const($db, 'QUOTEAUTOFOLLOWUPS_START_DATE', dol_print_date(dol_now(), '%Y-%m-%d'), 'chaine', 0, '', $conf->entity);
-		setEventMessages($langs->trans('QAFStartDateInitialized', dol_print_date(dol_now(), 'day')), null, 'warnings');
+		dolibarr_set_const($db, 'QUOTEAUTOFOLLOWUPS_START_DATE', dol_print_date(dol_now(), '%Y-%m-%d', 'tzserver'), 'chaine', 0, '', $conf->entity);
+		setEventMessages($langs->trans('QAFStartDateInitialized', dol_print_date(dol_now(), 'day', 'tzserver')), null, 'warnings');
 	}
 	if ($result > 0) {
 		header('Location: '.$_SERVER['PHP_SELF']);

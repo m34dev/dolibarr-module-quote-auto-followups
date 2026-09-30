@@ -102,6 +102,9 @@ function quoteAutoFollowupsGetSetupWarnings($db, $helper)
 	$sql .= " AND status = 1 AND entity IN (0, ".((int) $conf->entity).")";
 	$resql = $db->query($sql);
 	$obj = $resql ? $db->fetch_object($resql) : null;
+	if ($resql) {
+		$db->free($resql);
+	}
 	if (!isModEnabled('cron') || !$obj || (int) $obj->nb == 0) {
 		$warnings[] = $langs->trans('QAFWarningCronDisabled').' <a href="'.DOL_URL_ROOT.'/cron/list.php">'.$langs->trans('CronList').'</a>';
 	}
@@ -111,15 +114,22 @@ function quoteAutoFollowupsGetSetupWarnings($db, $helper)
 		$warnings[] = $langs->trans('QAFWarningNoCompanyEmail').' <a href="'.DOL_URL_ROOT.'/admin/company.php">'.$langs->trans('CompanyFoundation').'</a>';
 	} elseif (($mode == 'robot' || $mode == 'salesrep') && !isValidEmail(getDolGlobalString('MAIN_MAIL_EMAIL_FROM'))) {
 		$warnings[] = $langs->trans('QAFWarningNoRobotEmail').' <a href="'.DOL_URL_ROOT.'/admin/mails.php">'.$langs->trans('EMails').'</a>';
+	} elseif (preg_match('/^senderprofile_(\d+)$/', $mode, $reg)) {
+		$profile = $helper->getSenderProfile((int) $reg[1]);
+		if (!$profile || !isValidEmail($profile['email'])) {
+			$warnings[] = $langs->trans('QAFWarningSenderProfileUnavailable').' <a href="'.DOL_URL_ROOT.'/admin/mails_senderprofile_list.php">'.$langs->trans('EmailSenderProfiles').'</a>';
+		}
 	}
 
-	if (!getDolGlobalInt('QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE')) {
+	$templateid = getDolGlobalInt('QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE');
+	if ($templateid <= 0) {
 		$warnings[] = $langs->trans('QAFWarningNoTemplate');
+	} elseif (!array_key_exists($templateid, $helper->getTemplateOptions())) {
+		$warnings[] = $langs->trans('QAFWarningTemplateUnavailable');
 	}
 
-	$delays = $helper->getDelays();
 	if (!QuoteAutoFollowups::isValidDelays(getDolGlobalString('QUOTEAUTOFOLLOWUPS_DELAYS', '7,15,30'))) {
-		$warnings[] = $langs->trans('QAFErrorInvalidDelays').' ('.implode(',', $delays).')';
+		$warnings[] = $langs->trans('QAFErrorInvalidDelays').' ('.implode(',', $helper->getDelays()).')';
 	}
 
 	return $warnings;
