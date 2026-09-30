@@ -1,0 +1,18 @@
+# Translation file
+
+# Module label 'ModuleQuoteAutoFollowupsName'
+ModuleQuoteAutoFollowupsName = Quote Auto Followups
+# Module description 'ModuleQuoteAutoFollowupsDesc'
+ModuleQuoteAutoFollowupsDesc = Automatic follow-ups for commercial proposals
+
+#
+# Admin page
+#
+QuoteAutoFollowupsSetup = Quote Auto Followups
+Settings = Settings
+QuoteAutoFollowupsSetupPage = Options
+QuoteAutoFollowupsLevelShort = Quote Auto Followups
+QuoteAutoFollowupsLevel = Total Quote Auto Followups
+QuoteAutoFollowupsLevelTip = Maxmimum number of Quote Auto Followups
+NA = N/A
+QuoteAutoFollowups_OPTION = Show Quote Auto Followups
