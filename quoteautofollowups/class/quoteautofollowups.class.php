@@ -576,18 +576,31 @@ class QuoteAutoFollowups
 	 */
 
 	/**
-	 * Language to write the email in: the customer's default language if set.
+	 * Language to write the email in, when multi-language support is enabled: the default language of the
+	 * contact, else of the third party, else the language of the contact's country, else of the third
+	 * party's country. A single email goes to all follow-up contacts, so the first one decides.
 	 *
-	 * @param	Propal	$object		Quote (thirdparty must be loaded)
+	 * @param	Propal			$object		Quote (thirdparty must be loaded)
+	 * @param	Contact|null	$contact	First follow-up contact of the quote
 	 * @return	Translate
 	 */
-	private function getOutputLangs(Propal $object)
+	private function getOutputLangs(Propal $object, $contact = null)
 	{
 		global $conf, $langs;
 
 		$newlang = '';
-		if (getDolGlobalInt('MAIN_MULTILANGS') && is_object($object->thirdparty) && !empty($object->thirdparty->default_lang)) {
-			$newlang = $object->thirdparty->default_lang;
+		if (getDolGlobalInt('MAIN_MULTILANGS')) {
+			$thirdparty = (is_object($object->thirdparty) ? $object->thirdparty : null);
+			if (is_object($contact) && !empty($contact->default_lang)) {
+				$newlang = $contact->default_lang;
+			} elseif ($thirdparty && !empty($thirdparty->default_lang)) {
+				$newlang = $thirdparty->default_lang;
+			} elseif (is_object($contact) && !empty($contact->country_code)) {
+				$newlang = (string) getLanguageCodeFromCountryCode($contact->country_code);
+			}
+			if (empty($newlang) && $thirdparty && !empty($thirdparty->country_code)) {
+				$newlang = (string) getLanguageCodeFromCountryCode($thirdparty->country_code);
+			}
 		}
 		if (empty($newlang)) {
 			return $langs;
@@ -745,7 +758,6 @@ class QuoteAutoFollowups
 		if (!is_object($object->thirdparty)) {
 			$object->fetch_thirdparty();
 		}
-		$outputlangs = $this->getOutputLangs($object);
 
 		$recipients = $this->getRecipients($object);
 		if (empty($recipients['nbcontacts'])) {
@@ -754,6 +766,14 @@ class QuoteAutoFollowups
 		if (empty($recipients['emails'])) {
 			return $this->recordFailure($object, $user, $langs->transnoentitiesnoconv('QAFErrorNoValidEmail'), $manual);
 		}
+
+		// First recipient: decides the language and fills __CONTACTCIVNAME__, same as the core email form does
+		require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
+		$contact = new Contact($this->db);
+		if ($contact->fetch($recipients['contactids'][0]) <= 0) {
+			$contact = null;
+		}
+		$outputlangs = $this->getOutputLangs($object, $contact);
 
 		$sender = $this->getSender($object);
 		if (empty($sender)) {
@@ -772,15 +792,7 @@ class QuoteAutoFollowups
 
 		$state = $this->getState($object);
 
-		// Contact name for __CONTACTCIVNAME__, same as the core email form does
-		$contactcivname = '';
-		if (!empty($recipients['contactids'])) {
-			require_once DOL_DOCUMENT_ROOT.'/contact/class/contact.class.php';
-			$contact = new Contact($this->db);
-			if ($contact->fetch($recipients['contactids'][0]) > 0) {
-				$contactcivname = $contact->getFullName($outputlangs, 1);
-			}
-		}
+		$contactcivname = ($contact ? $contact->getFullName($outputlangs, 1) : '');
 
 		$substitutionarray = getCommonSubstitutionArray($outputlangs, 0, null, $object);
 		$substitutionarray['__CONTACTCIVNAME__'] = $contactcivname;

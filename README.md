@@ -11,6 +11,7 @@ Automatic follow-ups for commercial proposals (quotes) in Dolibarr.
 - Every follow-up, sent or failed (missing contact, missing email, ...), is recorded as an agenda event of the quote. The last error is also shown in the "Last follow-up error" field, available as a column of the quote list.
 - A "Follow up by email" button on the quote card sends a follow-up manually.
 - The email uses a native Dolibarr email template of type "Commercial proposals" (a default one is created on activation), with the standard substitution variables.
+- Emails in several languages: create one template per language with the same label and set its Language field. When multi-language support is enabled (`MAIN_MULTILANGS`), the variant used is the one matching the default language of the first follow-up contact, else of the third party, else the language of the contact's or third party's country (falling back to the main language, e.g. `es_ES` for `es_MX`, then to the variant without language). The attached PDF is generated in the same language.
 - Dedicated permissions: see follow-up information, send follow-ups manually, change follow-up settings of a quote.
 
 ### Prerequisites
