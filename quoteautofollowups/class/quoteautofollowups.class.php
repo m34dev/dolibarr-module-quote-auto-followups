@@ -685,14 +685,21 @@ class QuoteAutoFollowups
 	 */
 	private function getEmailTemplate($outputlangs)
 	{
+		global $conf;
+
 		$templateid = getDolGlobalInt('QUOTEAUTOFOLLOWUPS_EMAIL_TEMPLATE');
 		if ($templateid <= 0) {
 			return null;
 		}
 
 		$lang = (is_object($outputlangs) ? (string) $outputlangs->defaultlang : '');
-		$tmp = explode('_', $lang);
-		$mainlang = ($tmp[0] ? $tmp[0].'_'.strtoupper($tmp[0]) : '');
+		$mainlang = '';
+		if ($lang !== '') {
+			// Let Dolibarr expand the short code, which is not always xx_XX (en => en_US, el => el_GR, ...)
+			$tmplangs = new Translate('', $conf);
+			$tmplangs->setDefaultLang(substr($lang, 0, strpos($lang.'_', '_')));
+			$mainlang = (string) $tmplangs->defaultlang;
+		}
 
 		$sql = "SELECT t.rowid, t.lang, t.topic, t.content FROM ".$this->db->prefix()."c_email_templates as t";
 		$sql .= $this->getTemplateSqlFilter();
